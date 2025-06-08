@@ -10,7 +10,10 @@ SECTIONS
 	.text :
 	{
 		_ftext = .;
-		*(.text .stub .text.* .gnu.linkonce.t.*)
+	    /* Ensure crt0.o is placed first */
+    	KEEP(*crt0.o(.text))
+    	KEEP(*(.text._start))
+    	KEEP(*(.init))		*(.text .stub .text.* .gnu.linkonce.t.*)
 		_etext = .;
 	} > main_ram
 
@@ -47,10 +50,17 @@ SECTIONS
 		. = ALIGN(4);
 		_ebss = .;
 		_end = .;
-	} > sram
+	} > main_ram
+
+	/DISCARD/ :
+	{
+    	*(.eh_frame)
+    	*(.comment)
+	}
 }
 
-PROVIDE(_fstack = ORIGIN(sram) + LENGTH(sram) - 4);
+/* PROVIDE(_fstack = ORIGIN(sram) + LENGTH(sram) - 4); */
+PROVIDE(_fstack = ORIGIN(main_ram) + LENGTH(main_ram) - 4);
 
 PROVIDE(_fdata_rom = LOADADDR(.data));
 PROVIDE(_edata_rom = LOADADDR(.data) + SIZEOF(.data));
